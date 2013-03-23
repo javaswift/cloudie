@@ -10,7 +10,7 @@ Uses the CC-BY licensed Silk Iconset by [Mark James](http://www.famfamfam.com/)
 Features
 --------
 
-Based on the [JOSS](https://github.com/java-openstack/joss) library, it has the the following features:
+Based on the [JOSS](https://github.com/javaswift/joss) library, it has the the following features:
 - creation and deletion of containers.
 - creation and deletion of stored objects.
 - down and uploading of files.
