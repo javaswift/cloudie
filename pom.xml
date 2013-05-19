@@ -9,7 +9,7 @@
 
     <groupId>org.javaswift.cloudie</groupId>
     <artifactId>cloudie</artifactId>
-    <version>0.7.1</version>
+    <version>0.8.5</version>
     <packaging>jar</packaging>
     <name>Cloudie - an Open Stack Storage browser</name>
     <description>Cloudie is a simple user interface to browse Open Stack Storage and to manipulate it.</description>
@@ -35,7 +35,7 @@
     </developers>
 
     <properties>
-        <joss.version>0.7.1</joss.version>
+        <joss.version>0.8.5</joss.version>
         <jcommander.version>1.30</jcommander.version>
         <junit.version>4.10</junit.version>
         <mockito.version>1.9.0</mockito.version>
