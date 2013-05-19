@@ -43,6 +43,10 @@ Screenshots
 History
 =======
 
+V0.7.1 19-May-2013
+------------------
+- Upgrade to JOSS 0.8.5
+
 V0.7.1 16-Mrt-2013
 ------------------
 - Rename to org.javaswift
