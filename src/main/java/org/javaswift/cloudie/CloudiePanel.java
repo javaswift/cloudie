@@ -63,20 +63,19 @@ import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.javaswift.cloudie.login.CloudieCallbackWrapper;
 import org.javaswift.cloudie.login.CredentialsStore;
-import org.javaswift.cloudie.login.LoginPanel;
 import org.javaswift.cloudie.login.CredentialsStore.Credentials;
+import org.javaswift.cloudie.login.LoginPanel;
 import org.javaswift.cloudie.login.LoginPanel.LoginCallback;
 import org.javaswift.cloudie.ops.CloudieOperations;
+import org.javaswift.cloudie.ops.CloudieOperations.CloudieCallback;
 import org.javaswift.cloudie.ops.CloudieOperationsImpl;
 import org.javaswift.cloudie.ops.ContainerSpecification;
-import org.javaswift.cloudie.ops.CloudieOperations.CloudieCallback;
 import org.javaswift.cloudie.preview.PreviewPanel;
 import org.javaswift.cloudie.util.AsyncWrapper;
 import org.javaswift.cloudie.util.DoubleClickListener;
@@ -772,6 +771,8 @@ public class CloudiePanel extends JPanel implements CloudieOperations.CloudieCal
 
     @Override
     public void onError(CommandException ex) {
+        ex.printStackTrace();
+
         showError(ex);
     }
 
