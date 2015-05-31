@@ -21,12 +21,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.Collections;
 
-
-import org.javaswift.cloudie.ops.CloudieOperations;
-import org.javaswift.cloudie.ops.CloudieOperationsImpl;
-import org.javaswift.cloudie.ops.ContainerSpecification;
 import org.javaswift.cloudie.ops.CloudieOperations.CloudieCallback;
-import org.javaswift.joss.client.mock.ClientMock;
+import org.javaswift.joss.client.factory.AccountConfig;
 import org.javaswift.joss.model.Account;
 import org.javaswift.joss.model.Container;
 import org.javaswift.joss.model.StoredObject;
@@ -36,23 +32,25 @@ import org.mockito.Mockito;
 
 public class CloudieOperationsTest {
 
-    private ClientMock client;
     private CloudieOperations ops;
     private CloudieCallback callback;
     private Account account;
+    private AccountConfig accountConfig;
 
     @Before
     public void init() {
-        client = new ClientMock();
-        client.setAllowEveryone(true);
-        account = client.authenticate("", "", "", "");
-        ops = new CloudieOperationsImpl(client, account);
+        accountConfig = new AccountConfig();
+        accountConfig.setMockAllowEveryone(true);
+        ops = new CloudieOperationsImpl(true);
         callback = Mockito.mock(CloudieCallback.class);
+        //
+        ops.login(accountConfig, callback);
+        account = ((CloudieOperationsImpl) ops).getAccount();
     }
 
     @Test
     public void shouldLogin() {
-        ops.login("http://localhost:8080/", "user", "pass", "secret", callback);
+        ops.login(accountConfig, callback);
         Mockito.verify(callback, Mockito.atLeastOnce()).onLoginSuccess();
     }
 

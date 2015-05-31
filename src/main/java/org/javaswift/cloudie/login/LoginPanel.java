@@ -39,12 +39,13 @@ import org.javaswift.cloudie.CloudiePanel;
 import org.javaswift.cloudie.login.CredentialsStore.Credentials;
 import org.javaswift.cloudie.util.LabelComponentPanel;
 import org.javaswift.cloudie.util.ReflectionAction;
-
+import org.javaswift.joss.client.factory.AccountConfig;
+import org.javaswift.joss.client.factory.AuthenticationMethod;
 
 public class LoginPanel extends JPanel {
 
     public interface LoginCallback {
-        void doLogin(String authUrl, String tenant, String username, char[] pass);
+        void doLogin(AccountConfig config);
     }
 
     private Action okAction = new ReflectionAction<LoginPanel>("Ok", CloudiePanel.getIcon("server_connect.png"), this, "onOk");
@@ -60,9 +61,11 @@ public class LoginPanel extends JPanel {
     private DefaultComboBoxModel model = new DefaultComboBoxModel();
     private JComboBox savedCredentials = new JComboBox(model);
     private JTextField authUrl = new JTextField();
-    private JTextField tenant = new JTextField();
+    private JTextField tenantId = new JTextField();
+    private JTextField tenantName = new JTextField();
     private JTextField username = new JTextField();
     private JPasswordField password = new JPasswordField();
+    private JComboBox authMethod = new JComboBox(AuthenticationMethod.values());
     private JLabel warningLabel = new JLabel("Saved Credentials are stored in Plain-Text.", CloudiePanel.getIcon("table_error.png"), JLabel.CENTER);
 
     private LoginCallback callback;
@@ -92,11 +95,13 @@ public class LoginPanel extends JPanel {
         btn.add(saveButton);
         btn.add(deleteButton);
         //
+        box.add(new LabelComponentPanel("Authentication Method", authMethod));
         box.add(new LabelComponentPanel("", savedCredentials, btn));
         box.add(new LabelComponentPanel("AuthURL", authUrl));
-        box.add(new LabelComponentPanel("Tenant", tenant));
+        box.add(new LabelComponentPanel("Tenant Name", tenantName));
         box.add(new LabelComponentPanel("Username", username));
         box.add(new LabelComponentPanel("Password", password));
+        box.add(new LabelComponentPanel("Tenant Id", tenantId));
         //
         outer.add(box);
         outer.add(warn);
@@ -107,6 +112,17 @@ public class LoginPanel extends JPanel {
         refreshCredentials();
         enableDisable();
         bindDocumentListeners();
+        bindActionListeners();
+    }
+
+    private void bindActionListeners() {
+        authMethod.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                enableDisable();
+            }
+        });
     }
 
     private void bindSelectionListener() {
@@ -121,7 +137,9 @@ public class LoginPanel extends JPanel {
                     Credentials cr = (Credentials) savedCredentials.getSelectedItem();
                     if (cr != null) {
                         authUrl.setText(cr.authUrl);
-                        tenant.setText(cr.tenant);
+                        tenantName.setText(cr.tenantName);
+                        tenantId.setText(cr.tenantId);
+                        authMethod.setSelectedIndex(cr.method.ordinal());
                         username.setText(cr.username);
                         password.setText(String.valueOf(cr.password));
                         enableDisable();
@@ -134,9 +152,11 @@ public class LoginPanel extends JPanel {
 
     private void clearLoginForm() {
         authUrl.setText("");
-        tenant.setText("");
+        tenantId.setText("");
+        tenantName.setText("");
         username.setText("");
         password.setText("");
+        authMethod.setSelectedIndex(0);
         enableDisable();
     }
 
@@ -149,7 +169,9 @@ public class LoginPanel extends JPanel {
             }
             if (model.getSize() > 0) {
                 Credentials credentials = new Credentials();
-                credentials.tenant = "";
+                credentials.tenantName = "";
+                credentials.tenantId = "";
+                credentials.method = AuthenticationMethod.KEYSTONE;
                 credentials.username = "";
                 credentials.password = new char[0];
                 credentials.authUrl = "";
@@ -180,19 +202,29 @@ public class LoginPanel extends JPanel {
             }
         };
         authUrl.getDocument().addDocumentListener(lst);
-        tenant.getDocument().addDocumentListener(lst);
+        tenantName.getDocument().addDocumentListener(lst);
         username.getDocument().addDocumentListener(lst);
         password.getDocument().addDocumentListener(lst);
     }
 
     private void enableDisable() {
+        tenantId.setEnabled(isKeystone());
         saveAction.setEnabled(isAuthComplete());
         deleteAction.setEnabled(savedCredentials.getSelectedIndex() > 0);
         savedCredentials.setEnabled(model.getSize() > 0);
     }
 
+    private boolean isKeystone() {
+        return authMethod.getSelectedIndex() == AuthenticationMethod.KEYSTONE.ordinal();
+    }
+
     private boolean isAuthComplete() {
-        return !authUrl.getText().isEmpty() && !tenant.getText().isEmpty() && !username.getText().isEmpty() && !(password.getPassword().length == 0);
+        boolean result = !authUrl.getText().isEmpty() && !tenantName.getText().isEmpty() && !username.getText().isEmpty()
+                && !(password.getPassword().length == 0);
+        if (isKeystone()) {
+            result = result && !tenantId.getText().isEmpty();
+        }
+        return result;
     }
 
     public void onShow() {
@@ -200,7 +232,16 @@ public class LoginPanel extends JPanel {
     }
 
     public void onOk() {
-        callback.doLogin(authUrl.getText().trim(), tenant.getText().trim(), username.getText().trim(), password.getPassword());
+        AccountConfig config = new AccountConfig();
+        //
+        config.setAuthenticationMethod(AuthenticationMethod.valueOf(String.valueOf(authMethod.getSelectedItem())));
+        config.setAuthUrl(authUrl.getText());
+        config.setPassword(new String(password.getPassword()));
+        config.setTenantId(tenantId.getText());
+        config.setTenantName(tenantName.getText());
+        config.setUsername(username.getText());
+        //
+        callback.doLogin(config);
     }
 
     public void onCancel() {
@@ -209,8 +250,10 @@ public class LoginPanel extends JPanel {
 
     public void onSave() {
         Credentials cr = new Credentials();
+        cr.method = AuthenticationMethod.valueOf(String.valueOf(authMethod.getSelectedItem()));
         cr.authUrl = authUrl.getText().trim();
-        cr.tenant = tenant.getText().trim();
+        cr.tenantName = tenantName.getText().trim();
+        cr.tenantId = tenantId.getText().trim();
         cr.username = username.getText().trim();
         cr.password = password.getPassword();
         credentialsStore.save(cr);

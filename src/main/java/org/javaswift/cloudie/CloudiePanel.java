@@ -64,9 +64,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.javaswift.cloudie.login.CloudieCallbackWrapper;
 import org.javaswift.cloudie.login.CredentialsStore;
 import org.javaswift.cloudie.login.CredentialsStore.Credentials;
@@ -83,7 +80,8 @@ import org.javaswift.cloudie.util.GuiTreadingUtils;
 import org.javaswift.cloudie.util.LabelComponentPanel;
 import org.javaswift.cloudie.util.PopupTrigger;
 import org.javaswift.cloudie.util.ReflectionAction;
-import org.javaswift.joss.client.impl.ClientImpl;
+import org.javaswift.joss.client.factory.AccountConfig;
+import org.javaswift.joss.client.factory.AuthenticationMethod;
 import org.javaswift.joss.exception.CommandException;
 import org.javaswift.joss.model.Container;
 import org.javaswift.joss.model.StoredObject;
@@ -147,9 +145,25 @@ public class CloudiePanel extends JPanel implements CloudieOperations.CloudieCal
      * creates Cloudie and immediately logs in using the given credentials.
      * @param login the login credentials.
      */
-    public CloudiePanel(List<String> login) {
+    public CloudiePanel(AuthenticationMethod method, List<String> args) {
         this();
-        ops.login(login.get(0), login.get(1), login.get(2), login.get(3), callback);
+        ops.login(toAccountConfig(method, args), callback);
+    }
+
+    private AccountConfig toAccountConfig(AuthenticationMethod method, List<String> args) {
+        AccountConfig cfg = new AccountConfig();
+        cfg.setAuthenticationMethod(method);
+        switch (method) {
+        case KEYSTONE:
+            cfg.setTenantId(args.get(4));
+            // passthrough
+        default:
+            cfg.setAuthUrl(args.get(0));
+            cfg.setTenantName(args.get(1));
+            cfg.setUsername(args.get(2));
+            cfg.setPassword(args.get(3));
+        }
+        return cfg;
     }
 
     /**
@@ -169,7 +183,7 @@ public class CloudiePanel extends JPanel implements CloudieOperations.CloudieCal
         if (found == null) {
             throw new ParameterException("Unknown profile '" + profile + "'.");
         } else {
-            ops.login(found.authUrl, found.tenant, found.username, String.valueOf(found.password), callback);
+            ops.login(found.toAccountConfig(), callback);
         }
     }
 
@@ -258,13 +272,7 @@ public class CloudiePanel extends JPanel implements CloudieOperations.CloudieCal
     }
 
     private CloudieOperations createCloudieOperations() {
-        ClientImpl clientImpl = new ClientImpl();
-        PoolingClientConnectionManager cm = new PoolingClientConnectionManager();
-        cm.setMaxTotal(50);
-        cm.setDefaultMaxPerRoute(25);
-        HttpClient httpClient = new DefaultHttpClient(cm);
-        clientImpl.setHttpClient(httpClient);
-        CloudieOperationsImpl lops = new CloudieOperationsImpl(clientImpl);
+        CloudieOperationsImpl lops = new CloudieOperationsImpl();
         return AsyncWrapper.async(lops);
     }
 
@@ -361,7 +369,7 @@ public class CloudiePanel extends JPanel implements CloudieOperations.CloudieCal
         final JDialog loginDialog = new JDialog(owner, "Login");
         final LoginPanel loginPanel = new LoginPanel(new LoginCallback() {
             @Override
-            public void doLogin(String authUrl, String tenant, String username, char[] pass) {
+            public void doLogin(AccountConfig accountConfig) {
                 CloudieCallback cb = GuiTreadingUtils.guiThreadSafe(CloudieCallback.class, new CloudieCallbackWrapper(callback) {
                     @Override
                     public void onLoginSuccess() {
@@ -374,14 +382,14 @@ public class CloudiePanel extends JPanel implements CloudieOperations.CloudieCal
                         JOptionPane.showMessageDialog(loginDialog, "Login Failed\n" + ex.toString(), "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 });
-                ops.login(authUrl, tenant, username, new String(pass), cb);
+                ops.login(accountConfig, cb);
             }
         }, credentialsStore);
         try {
             loginPanel.setOwner(loginDialog);
             loginDialog.getContentPane().add(loginPanel);
             loginDialog.setModal(true);
-            loginDialog.setSize(480, 280);
+            loginDialog.setSize(480, 340);
             loginDialog.setResizable(false);
             loginDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             center(loginDialog);

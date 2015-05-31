@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.javaswift.joss.client.factory.AccountConfig;
+import org.javaswift.joss.client.impl.ClientImpl;
+import org.javaswift.joss.client.mock.ClientMock;
 import org.javaswift.joss.model.Account;
 import org.javaswift.joss.model.Client;
 import org.javaswift.joss.model.Container;
@@ -37,23 +40,28 @@ public class CloudieOperationsImpl implements CloudieOperations {
     private static final int MAX_PAGE_SIZE = 9999;
     private Client<?> client;
     private Account account;
+    private boolean mock;
 
-    public CloudieOperationsImpl(Client<?> client) {
-        this.client = client;
+    public CloudieOperationsImpl() {
+        this(false);
     }
 
-    protected CloudieOperationsImpl(Client<?> client, Account account) {
-        this(client);
-        this.account = account;
+    public CloudieOperationsImpl(boolean mock) {
+        this.mock = mock;
     }
 
     /**
      * {@inheritDoc}.
      */
     @Override
-    public void login(String url, String tenant, String user, String pass, CloudieCallback callback) {
+    public void login(AccountConfig config, CloudieCallback callback) {
         //
-        account = client.authenticate(tenant, user, pass, url);
+        if (account != null) {
+            logout(callback);
+        }
+        //
+        client = mock ? new ClientMock(config) : new ClientImpl(config);
+        account = client.authenticate();
         callback.onLoginSuccess();
         callback.onNumberOfCalls(account.getNumberOfCalls());
         //
@@ -226,6 +234,13 @@ public class CloudieOperationsImpl implements CloudieOperations {
         obj.getMetadata();
         callback.onStoredObjectUpdate(obj);
         callback.onNumberOfCalls(account.getNumberOfCalls());
+    }
+
+    /**
+     * @return the account (for testing only!).
+     */
+    protected Account getAccount() {
+        return account;
     }
 
 }

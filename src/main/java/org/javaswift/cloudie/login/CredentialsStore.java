@@ -20,6 +20,11 @@ import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import org.apache.commons.lang.ObjectUtils;
+import org.javaswift.joss.client.factory.AccountConfig;
+import org.javaswift.joss.client.factory.AuthenticationMethod;
+import org.slf4j.LoggerFactory;
+
 /**
  * Stores credentials (in plain/encoded) text using the Java Preferences API.
  * @author E. Hooijmeier
@@ -29,8 +34,10 @@ public class CredentialsStore {
     private static final String GARBLESRC = "qpwoeirutyalskdjfhgzmxncbvQPWOEIRUTYALSKDJFHGZMXNCVB";
 
     public static class Credentials {
+        public AuthenticationMethod method;
         public String authUrl;
-        public String tenant;
+        public String tenantId;
+        public String tenantName;
         public String username;
         public char[] password;
 
@@ -38,7 +45,8 @@ public class CredentialsStore {
         public boolean equals(Object obj) {
             if (obj instanceof Credentials) {
                 Credentials cr = (Credentials) obj;
-                return tenant.equals(cr.tenant) && username.equals(cr.username);
+                return ObjectUtils.equals(tenantName, cr.tenantName) && ObjectUtils.equals(username, cr.username) && ObjectUtils.equals(tenantId, cr.tenantId)
+                        && ObjectUtils.equals(method, cr.method);
             } else {
                 return super.equals(obj);
             }
@@ -46,11 +54,22 @@ public class CredentialsStore {
 
         @Override
         public int hashCode() {
-            return tenant.hashCode() + 31 * username.hashCode();
+            return tenantName.hashCode() + 31 * username.hashCode() + 31 * 31 * (tenantId == null ? 0 : tenantId.hashCode()) + method.hashCode();
         }
 
         public String toString() {
-            return tenant + "-" + username;
+            return tenantName + "(" + tenantId + ") -" + username;
+        }
+
+        public AccountConfig toAccountConfig() {
+            AccountConfig account = new AccountConfig();
+            account.setAuthenticationMethod(method);
+            account.setAuthUrl(authUrl);
+            account.setTenantId(tenantId);
+            account.setTenantName(tenantName);
+            account.setUsername(username);
+            account.setPassword(new String(password));
+            return account;
         }
     }
 
@@ -63,7 +82,12 @@ public class CredentialsStore {
         try {
             Preferences prefs = Preferences.userNodeForPackage(CredentialsStore.class);
             for (String node : prefs.childrenNames()) {
-                results.add(toCredentials(prefs.node(node)));
+                Preferences cred = prefs.node(node);
+                try {
+                    results.add(toCredentials(cred));
+                } catch (IllegalArgumentException ex) {
+                    LoggerFactory.getLogger(getClass()).warn("Bad preferences node - skipping");
+                }
             }
         } catch (BackingStoreException ex) {
             throw new RuntimeException(ex);
@@ -78,8 +102,10 @@ public class CredentialsStore {
      */
     private Credentials toCredentials(Preferences node) {
         Credentials cr = new Credentials();
+        cr.method = AuthenticationMethod.valueOf(node.get("method", AuthenticationMethod.KEYSTONE.name()));
         cr.authUrl = node.get("authUrl", "");
-        cr.tenant = node.get("tenant", "");
+        cr.tenantName = node.get("tenantName", "");
+        cr.tenantId = node.get("tenantId", "");
         cr.username = node.get("username", "");
         cr.password = garble(node.get("password", ""));
         return cr;
@@ -114,8 +140,10 @@ public class CredentialsStore {
     }
 
     private void saveCredentials(Preferences node, Credentials cr) {
+        node.put("method", String.valueOf(cr.method));
         node.put("authUrl", cr.authUrl);
-        node.put("tenant", cr.tenant);
+        node.put("tenantId", cr.tenantId);
+        node.put("tenantName", cr.tenantName);
         node.put("username", cr.username);
         node.put("password", String.valueOf(garble(cr.password)));
     }

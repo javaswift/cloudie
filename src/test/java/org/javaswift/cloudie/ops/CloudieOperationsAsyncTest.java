@@ -17,13 +17,9 @@ package org.javaswift.cloudie.ops;
 
 import java.io.File;
 
-
-import org.javaswift.cloudie.ops.CloudieOperations;
-import org.javaswift.cloudie.ops.CloudieOperationsImpl;
-import org.javaswift.cloudie.ops.ContainerSpecification;
 import org.javaswift.cloudie.ops.CloudieOperations.CloudieCallback;
 import org.javaswift.cloudie.util.AsyncWrapper;
-import org.javaswift.joss.client.mock.ClientMock;
+import org.javaswift.joss.client.factory.AccountConfig;
 import org.javaswift.joss.exception.CommandException;
 import org.javaswift.joss.model.Account;
 import org.junit.Before;
@@ -32,18 +28,20 @@ import org.mockito.Mockito;
 
 public class CloudieOperationsAsyncTest {
 
-    private ClientMock client;
     private CloudieOperations ops;
     private CloudieCallback callback;
+    private AccountConfig accountConfig;
     private Account account;
 
     @Before
     public void init() {
-        client = new ClientMock();
-        client.setAllowEveryone(true);
-        account = client.authenticate("", "", "", "");
-        ops = AsyncWrapper.async(new CloudieOperationsImpl(client, account));
+        accountConfig = new AccountConfig();
+        accountConfig.setMockAllowEveryone(true);
+        CloudieOperationsImpl target = new CloudieOperationsImpl(true);
+        ops = AsyncWrapper.async(target);
         callback = Mockito.mock(CloudieCallback.class);
+        target.login(accountConfig, callback);
+        account = target.getAccount();
     }
 
     @Test

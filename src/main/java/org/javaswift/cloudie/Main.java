@@ -24,6 +24,8 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
+import org.javaswift.joss.client.factory.AuthenticationMethod;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -34,8 +36,12 @@ import com.beust.jcommander.ParameterException;
 public class Main {
 
     public static class Arguments {
-        @Parameter(names = { "-login" }, description = "connects to the cloud. Takes 4 arguments: [AuthURL] [Tenant] [Username] [Password]", arity = 4)
-        private List<String> login = new ArrayList<String>();
+        @Parameter(names = { "-basic" }, description = "connects to the cloud using basic auth. Takes 4 arguments: [AuthURL] [TenantName] [Username] [Password]", arity = 4)
+        private List<String> basic = new ArrayList<String>();
+        @Parameter(names = { "-temp" }, description = "connects to the cloud using basic auth. Takes 4 arguments: [AuthURL] [TenantName] [Username] [Password]", arity = 4)
+        private List<String> temp = new ArrayList<String>();
+        @Parameter(names = { "-keystone" }, description = "connects to the cloud using basic auth. Takes 5 arguments: [AuthURL] [TenantName] [Username] [Password] [TenantId]", arity = 5)
+        private List<String> keystone = new ArrayList<String>();
         @Parameter(names = { "-profile" }, description = "connects to the cloud using an previously stored profile.")
         private String profile;
         @Parameter(names = { "-help", "-?", "--?" }, description = "Brief help.")
@@ -83,8 +89,12 @@ public class Main {
     }
 
     private static CloudiePanel createCloudie(Arguments args) {
-        if (args.login.size() == 4) {
-            return new CloudiePanel(args.login);
+        if (args.basic.size() == 4) {
+            return new CloudiePanel(AuthenticationMethod.BASIC, args.basic);
+        } else if (args.temp.size() == 4) {
+            return new CloudiePanel(AuthenticationMethod.TEMPAUTH, args.temp);
+        } else if (args.keystone.size() == 5) {
+            return new CloudiePanel(AuthenticationMethod.KEYSTONE, args.keystone);
         } else if (args.profile != null) {
             return new CloudiePanel(args.profile);
         } else {

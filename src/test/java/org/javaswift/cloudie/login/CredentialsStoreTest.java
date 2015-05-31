@@ -18,8 +18,7 @@ package org.javaswift.cloudie.login;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-
-import org.javaswift.cloudie.login.CredentialsStore;
+import org.javaswift.joss.client.factory.AuthenticationMethod;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,8 +31,10 @@ public class CredentialsStoreTest {
     public void init() {
         store = new CredentialsStore();
         cr = new CredentialsStore.Credentials();
+        cr.method = AuthenticationMethod.KEYSTONE;
         cr.authUrl = "https://42.nl";
-        cr.tenant = "test-tenant";
+        cr.tenantName = "test-tenantName";
+        cr.tenantId = "test-tenantId";
         cr.username = "test-user";
         cr.password = "boterhammetpindakaas".toCharArray();
     }

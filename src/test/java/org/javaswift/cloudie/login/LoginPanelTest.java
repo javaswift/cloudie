@@ -15,10 +15,8 @@
  */
 package org.javaswift.cloudie.login;
 
-
-import org.javaswift.cloudie.login.CredentialsStore;
-import org.javaswift.cloudie.login.LoginPanel;
 import org.javaswift.cloudie.login.LoginPanel.LoginCallback;
+import org.javaswift.joss.client.factory.AccountConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -48,7 +46,7 @@ public class LoginPanelTest {
         LoginPanel loginPanel = new LoginPanel(callback, credentialsStore);
         loginPanel.onOk();
         //
-        Mockito.verify(callback).doLogin(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(char[].class));
+        Mockito.verify(callback).doLogin(Mockito.any(AccountConfig.class));
     }
 
 }

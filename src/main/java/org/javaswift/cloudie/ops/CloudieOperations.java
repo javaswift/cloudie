@@ -19,6 +19,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import org.javaswift.joss.client.factory.AccountConfig;
 import org.javaswift.joss.exception.CommandException;
 import org.javaswift.joss.model.Container;
 import org.javaswift.joss.model.StoredObject;
@@ -116,14 +117,10 @@ public interface CloudieOperations {
     }
 
     /**
-     * performs a login.
-     * @param url the url to login against.
-     * @param tenant the tenant.
-     * @param user the username.
-     * @param pass the password.
+     * initializes the connection and performs a login.
      * @param callback the callback.
      */
-    void login(String url, String tenant, String user, String pass, CloudieCallback callback);
+    void login(AccountConfig accountConfig, CloudieCallback callback);
 
     /**
      * logout from the current session
