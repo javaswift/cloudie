@@ -65,6 +65,7 @@ public class LoginPanel extends JPanel {
     private JTextField tenantName = new JTextField();
     private JTextField username = new JTextField();
     private JPasswordField password = new JPasswordField();
+    private JTextField preferredRegion = new JTextField();
     private JComboBox authMethod = new JComboBox(AuthenticationMethod.values());
     private JLabel warningLabel = new JLabel("Saved Credentials are stored in Plain-Text.", CloudiePanel.getIcon("table_error.png"), JLabel.CENTER);
 
@@ -102,6 +103,7 @@ public class LoginPanel extends JPanel {
         box.add(new LabelComponentPanel("Username", username));
         box.add(new LabelComponentPanel("Password", password));
         box.add(new LabelComponentPanel("Tenant Id", tenantId));
+        box.add(new LabelComponentPanel("Preferred Region (Optional)", preferredRegion));
         //
         outer.add(box);
         outer.add(warn);
@@ -142,6 +144,7 @@ public class LoginPanel extends JPanel {
                         authMethod.setSelectedIndex(cr.method.ordinal());
                         username.setText(cr.username);
                         password.setText(String.valueOf(cr.password));
+                        preferredRegion.setText(cr.preferredRegion);
                         enableDisable();
                     }
                 }
@@ -156,6 +159,7 @@ public class LoginPanel extends JPanel {
         tenantName.setText("");
         username.setText("");
         password.setText("");
+        preferredRegion.setText("");
         authMethod.setSelectedIndex(0);
         enableDisable();
     }
@@ -175,6 +179,7 @@ public class LoginPanel extends JPanel {
                 credentials.username = "";
                 credentials.password = new char[0];
                 credentials.authUrl = "";
+                credentials.preferredRegion = "";
                 model.insertElementAt(credentials, 0);
                 savedCredentials.setSelectedIndex(0);
             }
@@ -205,6 +210,7 @@ public class LoginPanel extends JPanel {
         tenantName.getDocument().addDocumentListener(lst);
         username.getDocument().addDocumentListener(lst);
         password.getDocument().addDocumentListener(lst);
+        preferredRegion.getDocument().addDocumentListener(lst);
     }
 
     private void enableDisable() {
@@ -240,6 +246,7 @@ public class LoginPanel extends JPanel {
         config.setTenantId(tenantId.getText());
         config.setTenantName(tenantName.getText());
         config.setUsername(username.getText());
+        config.setPreferredRegion(preferredRegion.getText());
         //
         callback.doLogin(config);
     }
@@ -256,6 +263,7 @@ public class LoginPanel extends JPanel {
         cr.tenantId = tenantId.getText().trim();
         cr.username = username.getText().trim();
         cr.password = password.getPassword();
+        cr.preferredRegion = preferredRegion.getText().trim();
         credentialsStore.save(cr);
         refreshCredentials();
         savedCredentials.setSelectedItem(cr);
