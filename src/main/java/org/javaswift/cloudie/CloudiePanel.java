@@ -389,7 +389,7 @@ public class CloudiePanel extends JPanel implements CloudieOperations.CloudieCal
             loginPanel.setOwner(loginDialog);
             loginDialog.getContentPane().add(loginPanel);
             loginDialog.setModal(true);
-            loginDialog.setSize(480, 340);
+            loginDialog.setSize(480, 380);
             loginDialog.setResizable(false);
             loginDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             center(loginDialog);

@@ -40,7 +40,8 @@ public class CredentialsStore {
         public String tenantName;
         public String username;
         public char[] password;
-
+        public String preferredRegion;
+        
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof Credentials) {
@@ -69,6 +70,7 @@ public class CredentialsStore {
             account.setTenantName(tenantName);
             account.setUsername(username);
             account.setPassword(new String(password));
+            account.setPreferredRegion(preferredRegion);
             return account;
         }
     }
@@ -108,6 +110,7 @@ public class CredentialsStore {
         cr.tenantId = node.get("tenantId", "");
         cr.username = node.get("username", "");
         cr.password = garble(node.get("password", ""));
+        cr.preferredRegion = node.get("preferredRegion", "");
         return cr;
     }
 
@@ -146,6 +149,7 @@ public class CredentialsStore {
         node.put("tenantName", cr.tenantName);
         node.put("username", cr.username);
         node.put("password", String.valueOf(garble(cr.password)));
+        node.put("preferredRegion", cr.preferredRegion);
     }
 
     //
